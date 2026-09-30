@@ -1,8 +1,17 @@
 # Dynamic Analog Clock
 # Continuously updates in real-time
-# Press Ctrl+C to stop
+# Click the stop button in RStudio console to stop
 
-graphics.off()
+# Ensure we have an active graphics device
+if (dev.cur() == 1) {
+  if (Sys.info()["sysname"] == "Darwin") {
+    quartz(width = 6, height = 6)
+  } else if (Sys.info()["sysname"] == "Windows") {
+    windows(width = 6, height = 6)
+  } else {
+    X11(width = 6, height = 6)
+  }
+}
 
 # Function to draw the complete clock
 draw_clock <- function(clock_time) {
@@ -79,9 +88,13 @@ draw_clock <- function(clock_time) {
 }
 
 # Main loop: continuously update the clock
-while (TRUE) {
-  dev.hold()
-  draw_clock(Sys.time())
-  dev.flush()
-  Sys.sleep(0.1)  # Update 10 times per second for smooth motion
-}
+tryCatch({
+  repeat {
+    draw_clock(Sys.time())
+    Sys.sleep(0.1)  # Update 10 times per second for smooth motion
+  }
+}, interrupt = function(e) {
+  cat("\nClock stopped.\n")
+}, error = function(e) {
+  cat("Error:", conditionMessage(e), "\n")
+})
